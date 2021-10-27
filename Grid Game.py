@@ -7,12 +7,12 @@ Created on Wed Oct 20 10:57:03 2021
 
 # importing the libraries
 
-import sys
 import numpy as np
 import matplotlib.pyplot as plt
 from abc import ABC, abstractmethod
 from numpy.random import default_rng
-from queue import PriorityQueue
+from node import Node
+from priorityQueue import PQ
 
 
 # The main class, which contains the necessary methods and properties, it is an abstract class for the game's two modes.
@@ -138,17 +138,6 @@ class GridGame(ABC):
         pass
 
 
-class Node:
-    
-    def __init__(self, i, j, w):
-        self.i = i
-        self.j = j
-        self.w = w
-        self.pre = None
-        self.distance = sys.maxsize
-        
-
-
 
 # The first subclass, this class will inherit the properties and methods from the GridGame class. 
 #In this mode, the cost of each cell is the number inside the cell itself
@@ -204,64 +193,60 @@ class numberInCellMode(GridGame):
     
 
     def dijkstra(self, grid):
-        
-        distances = np.ones((self.height, self.width), dtype=int)*sys.maxsize
-        distances[0][0] = 0
+        height = len(grid)
+        width = len(grid[0])
         visited = []
-        path_to_destination= []
-        path = np.empty( (self.height, self.width), dtype=object)
+        path = []
+        nodes = np.empty((height, width), dtype=object)
+        
         for i in range(len(grid)):
-            for j in range(len(grid[0])):
-                node = Node(i, j, grid[i][j])
-                path[i][j] = node
-               
-       
-        pq = PriorityQueue()
-        pq.put((0, (0, 0, 0)))
+                for j in range(len(grid[0])):
+                    node = Node(i, j, grid[i][j])
+                    nodes[i][j] = node
+    
+        nodes[0][0].distance = 0
+        pq = PQ()
+        node_0 = nodes[0][0]
+        pq.put(node_0)
         
-        while not pq.empty():
+        while not pq.isEmpty():
             
-                distance, current_cell = pq.get()
-                visited.append(current_cell)
+            current_node = pq.get()
+            visited.append(current_node)
+            current_i = current_node.i
+            current_j = current_node.j
             
-                current_i = current_cell[0]
-                current_j = current_cell[1]
-                
-                for neighbor in self.get_adjacent([current_i, current_j]):
-                    i = neighbor[0]
-                    j = neighbor[1]
-                    newDistance = neighbor[2]
-                    if neighbor not in visited:
-                        old_cost = distances[i][j]
-                        new_cost = distances[current_i][current_j] + newDistance
-                        if new_cost < old_cost:
-                                pq.put((new_cost, [i, j, newDistance]))
-                                distances[i][j] = new_cost
-                                path[i][j].pre = [current_i, current_j]
-        
-        
-        print(distances)
-        for i in range(len(path)):
-            for j in range(len(path[0])):
-                           print(f"before [{i}, {j}]: {path[i][j].pre}")
-        
+
+            for neighbor in self.get_adjacent([current_i, current_j]):
+                i = neighbor[0]
+                j = neighbor[1]
+                distance = neighbor[2]
+                if neighbor not in visited:
+                    newNode = nodes[i][j]
+                    old_cost = newNode.distance
+                    new_cost = current_node.distance + distance
+                    if new_cost < old_cost:
+                        pq.put(newNode)
+                        nodes[i][j].distance = new_cost
+                        nodes[i][j].pre = [current_i, current_j]
+            
+            
         i = len(grid)-1
         j = len(grid[0])-1
         complate = False
         while not complate:
-            path_to_destination.append([i, j])
-            if path[i][j].pre is not None:
+            path.append([i, j])
+            if nodes[i][j].pre is not None:
                 k = i
                 x = j
-                i = path[k][x].pre[0]
-                j = path[k][x].pre[1]
+                i = nodes[k][x].pre[0]
+                j = nodes[k][x].pre[1]
             else: complate = True
-        
-        return path_to_destination
+            
+        return list(reversed(path))
 
 
-# The second subclass, this class will inherit the properties and methods from the GridGame class. 
-# In this mode, the cost of each cell the absolute of the difference between the previous cell the agent was on and the current cell it is on    
+
 class AbsoluteValueMode(GridGame):
 
     # findPath method works same way as in mode one, but instead of comparing the values, it compares the absolute differences
@@ -307,73 +292,68 @@ class AbsoluteValueMode(GridGame):
         self.visualizeTheGrid(newGrid)
                 
     def dijkstra(self, grid):
-        distances = np.ones((self.height, self.width), dtype=int)*sys.maxsize
-        distances[0][0] = 0
+        height = len(grid)
+        width = len(grid[0])
         visited = []
-        path_to_destination= []
-        path = np.empty( (self.height, self.width), dtype=object)
+        path = []
+        nodes = np.empty((height, width), dtype=object)
+        
         for i in range(len(grid)):
-            for j in range(len(grid[0])):
-                node = Node(i, j, grid[i][j])
-                path[i][j] = node
-               
-       
-        pq = PriorityQueue()
-        pq.put((0, (0, 0, 0)))
+                for j in range(len(grid[0])):
+                    node = Node(i, j, grid[i][j])
+                    nodes[i][j] = node
+    
+        nodes[0][0].distance = 0
+        pq = PQ()
+        node_0 = nodes[0][0]
+        pq.put(node_0)
         
-        while not pq.empty():
+        while not pq.isEmpty():
             
-                distance, current_cell = pq.get()
-                visited.append(current_cell)
+            current_node = pq.get()
+            visited.append(current_node)
+            current_i = current_node.i
+            current_j = current_node.j
             
-                current_i = current_cell[0]
-                current_j = current_cell[1]
-                
-                for neighbor in self.get_adjacent([current_i, current_j]):
-                    i = neighbor[0]
-                    j = neighbor[1]
-                    newDistance = neighbor[2]
-                    if neighbor not in visited:
-                        old_cost = distances[i][j]
-                        new_cost = abs(distances[current_i][current_j] - newDistance)
-                        if new_cost < old_cost:
-                                pq.put((new_cost, [i, j, newDistance]))
-                                distances[i][j] = new_cost
-                                path[i][j].pre = [current_i, current_j]
-        
-        
-        print(distances)
-        for i in range(len(path)):
-            for j in range(len(path[0])):
-                           print(f"before [{i}, {j}]: {path[i][j].pre}")
-        
+
+            for neighbor in self.get_adjacent([current_i, current_j]):
+                i = neighbor[0]
+                j = neighbor[1]
+                distance = neighbor[2]
+                if neighbor not in visited:
+                    newNode = nodes[i][j]
+                    old_cost = newNode.distance
+                    new_cost = abs( current_node.distance - distance)
+                    if new_cost < old_cost:
+                        pq.put(newNode)
+                        nodes[i][j].distance = new_cost
+                        nodes[i][j].pre = [current_i, current_j]
+            
+            
         i = len(grid)-1
         j = len(grid[0])-1
         complate = False
         while not complate:
-            path_to_destination.append([i, j])
-            if path[i][j].pre is not None:
+            path.append([i, j])
+            if nodes[i][j].pre is not None:
                 k = i
                 x = j
-                i = path[k][x].pre[0]
-                j = path[k][x].pre[1]
+                i = nodes[k][x].pre[0]
+                j = nodes[k][x].pre[1]
             else: complate = True
-        
-        return path_to_destination
+            
+        return list(reversed(path))
 
 
-gridGame = numberInCellMode(10, 10)
-grid = gridGame.buildTheGame()
-print(grid)
-gridGame.visualizeTheGrid(grid)
-path = gridGame.dijkstra(grid)
-path = list(reversed(path))
+
+mode_A = numberInCellMode(5, 5)
+grid_A = mode_A.buildTheGame()
+mode_A.visualizeTheGrid(grid_A)
+path_A = mode_A.findPath(grid_A)
+mode_A.computePath(grid_A, path_A)
+
+
+path = mode_A.dijkstra(grid_A)
+mode_A.computePath(grid_A, path)
 print(path)
-gridGame.computePath(grid, path)
 
-#path = gridGame.dijkstra(grid)
-
-
-
-
-        
