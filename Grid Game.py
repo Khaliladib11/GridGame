@@ -192,50 +192,74 @@ class numberInCellMode(GridGame):
         self.visualizeTheGrid(newGrid)
     
 
+    # Implementation of dijkstra's algorithm to find the shortest path
     def dijkstra(self, grid):
+        
+        # First initialize 2 variables for the height and width of the grid
         height = len(grid)
         width = len(grid[0])
+        # initialize two empty arrays, one to keep track visited node, the other is to store the path and return it
         visited = []
         path = []
+        # initialize a numpy array of object (Node)
         nodes = np.empty((height, width), dtype=object)
         
+        # fill the nodes np-array with the actual node from the grid
+        # Node class is imported from another python file
         for i in range(len(grid)):
                 for j in range(len(grid[0])):
                     node = Node(i, j, grid[i][j])
                     nodes[i][j] = node
-    
+        
         nodes[0][0].distance = 0
+        
+        # initialize the priority Queue, also it is imported from another python file
+        # put the first node to the priority Queue
         pq = PQ()
         node_0 = nodes[0][0]
         pq.put(node_0)
         
+        # iterate over the pq until its empty
         while not pq.isEmpty():
             
+            # get the top of pq
             current_node = pq.get()
             visited.append(current_node)
             current_i = current_node.i
             current_j = current_node.j
             
-
+            # get all neighbors for the current cell using get_adjacent method 
             for neighbor in self.get_adjacent([current_i, current_j]):
                 i = neighbor[0]
                 j = neighbor[1]
                 distance = neighbor[2]
+                
+                # if the cell not visited, check the old cost and the new one
+                # compare them
                 if neighbor not in visited:
                     newNode = nodes[i][j]
                     old_cost = newNode.distance
+                    # the new cost here will be the sum of the of the distance to the current node in the PQ plus the weight of the adjacent cell
                     new_cost = current_node.distance + distance
+                    
+                    # if the new cost smaller then old cost, update the distance of the node
+                    # put the node in the PQ, and assign the pre attribute to the node behind
                     if new_cost < old_cost:
                         pq.put(newNode)
                         nodes[i][j].distance = new_cost
                         nodes[i][j].pre = [current_i, current_j]
             
-            
+        
+        # after we iterate over all the grid, now we need to append the path from destination to source in the path array
         i = len(grid)-1
         j = len(grid[0])-1
+        
+        # basically, here we appedn the last cell(destination cell), then start looking for the previous cell
+        # in this way, we can track the path from destination to source
         complate = False
         while not complate:
             path.append([i, j])
+            print(i, j)
             if nodes[i][j].pre is not None:
                 k = i
                 x = j
@@ -243,6 +267,8 @@ class numberInCellMode(GridGame):
                 j = nodes[k][x].pre[1]
             else: complate = True
             
+        # finally return the reversed path, because the path will be from destination to source
+        # we want it to be from source to destination
         return list(reversed(path))
 
 
@@ -290,7 +316,11 @@ class AbsoluteValueMode(GridGame):
             
         print(f"The total cost is: {cost}")
         self.visualizeTheGrid(newGrid)
-                
+             
+    
+    
+    # same implementation like before, but here new cost will be the sum of the destination for the cell 
+    # plus the absolute value between the current cell's weight and adjacent cell  
     def dijkstra(self, grid):
         height = len(grid)
         width = len(grid[0])
@@ -315,7 +345,6 @@ class AbsoluteValueMode(GridGame):
             current_i = current_node.i
             current_j = current_node.j
             
-
             for neighbor in self.get_adjacent([current_i, current_j]):
                 i = neighbor[0]
                 j = neighbor[1]
@@ -323,18 +352,24 @@ class AbsoluteValueMode(GridGame):
                 if neighbor not in visited:
                     newNode = nodes[i][j]
                     old_cost = newNode.distance
-                    new_cost = abs( current_node.distance - distance)
+                    new_cost = current_node.distance + abs( current_node.weight - distance)
                     if new_cost < old_cost:
                         pq.put(newNode)
                         nodes[i][j].distance = new_cost
                         nodes[i][j].pre = [current_i, current_j]
-            
-            
+                        
+                        
+    
+        for i in range(len(nodes)):
+            for j in range(len(nodes[0])):
+                nodes[i][j].printInfo()
+        
         i = len(grid)-1
         j = len(grid[0])-1
         complate = False
         while not complate:
             path.append([i, j])
+            print(i, j)
             if nodes[i][j].pre is not None:
                 k = i
                 x = j
@@ -345,15 +380,19 @@ class AbsoluteValueMode(GridGame):
         return list(reversed(path))
 
 
-
-mode_A = numberInCellMode(5, 5)
-grid_A = mode_A.buildTheGame()
-mode_A.visualizeTheGrid(grid_A)
-path_A = mode_A.findPath(grid_A)
-mode_A.computePath(grid_A, path_A)
-
-
-path = mode_A.dijkstra(grid_A)
-mode_A.computePath(grid_A, path)
+gridGame = AbsoluteValueMode(10, 10)
+grid = gridGame.buildTheGame()
+gridGame.visualizeTheGrid(grid)
+path = gridGame.dijkstra(grid)
 print(path)
+gridGame.computePath(grid, path)
+
+
+
+
+
+
+
+
+
 
