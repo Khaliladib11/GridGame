@@ -28,11 +28,26 @@ class GridGame(ABC):
         
     
     # This method is responsible for build the game, essentially filling the grid with numbers
-    def buildTheGame(self):
+    def buildTheGame(self, distribution="normal"):
         
-        #usign the default distribution
-        rng = default_rng()
-        self.grid = rng.integers(0, self.n, (self.height, self.width))
+        #check the distribution and act according to it
+        if distribution == "lognormal":
+            self.grid = np.random.lognormal(0, 1, (self.height, self.width))
+            
+        elif distribution == 'uniform':
+            self.grid = np.random.uniform(0, 9, (self.height, self.width))
+            
+        elif distribution == 'gamma':
+            self.grid = np.random.gamma(5, 1, (self.height, self.width))
+        
+        elif distribution == "poisson":
+            self.grid = np.random.poisson(5, (self.height, self.width))
+            
+        else:
+             rng = default_rng()
+             self.grid = rng.integers(0, self.n, (self.height, self.width))
+                
+        
         #assign the value in the cell[0][0] to 0 and return the grid
         self.grid[0][0] = 0
         return self.grid
@@ -120,6 +135,30 @@ class GridGame(ABC):
         return neighbors
     
     
+    
+    def mean(self, path):
+        weight_path = []
+        
+        for p in range(len(path)):
+            i = path[p][0]
+            j = path[p][1]
+            weight_path.append(self.grid[i][j])
+        
+        return round(np.mean(weight_path), 2)
+    
+    def variance(self, path):
+        weight_path = []
+        
+        for p in range(len(path)):
+            i = path[p][0]
+            j = path[p][1]
+            weight_path.append(self.grid[i][j])
+        
+        return round(np.var(weight_path), 2)
+    
+    
+            
+    
     # The abstract method needs to be implemented in the subclasses, it is represents the naive approach for the task. more details in the subclasses
     @abstractmethod
     def findPath(self, grid, i=0, j=0, path=[[0, 0]]):
@@ -189,7 +228,8 @@ class numberInCellMode(GridGame):
         # finally, it will print the cost and visualeze the grid with the path
         # the value -10 in the cells path helps to visualize the path.
         print(f"The total cost is: {cost}")
-        self.visualizeTheGrid(newGrid)
+        #self.visualizeTheGrid(newGrid)
+        return cost, newGrid
     
 
     # Implementation of dijkstra's algorithm to find the shortest path
@@ -259,7 +299,6 @@ class numberInCellMode(GridGame):
         complate = False
         while not complate:
             path.append([i, j])
-            print(i, j)
             if nodes[i][j].pre is not None:
                 k = i
                 x = j
@@ -315,7 +354,8 @@ class AbsoluteValueMode(GridGame):
             newGrid[currentI][currentJ] = -10
             
         print(f"The total cost is: {cost}")
-        self.visualizeTheGrid(newGrid)
+        #self.visualizeTheGrid(newGrid)
+        return cost, newGrid
              
     
     
@@ -359,17 +399,11 @@ class AbsoluteValueMode(GridGame):
                         nodes[i][j].pre = [current_i, current_j]
                         
                         
-    
-        for i in range(len(nodes)):
-            for j in range(len(nodes[0])):
-                nodes[i][j].printInfo()
-        
         i = len(grid)-1
         j = len(grid[0])-1
         complate = False
         while not complate:
             path.append([i, j])
-            print(i, j)
             if nodes[i][j].pre is not None:
                 k = i
                 x = j
@@ -380,19 +414,36 @@ class AbsoluteValueMode(GridGame):
         return list(reversed(path))
 
 
+"""
 gridGame = AbsoluteValueMode(10, 10)
 grid = gridGame.buildTheGame()
 gridGame.visualizeTheGrid(grid)
 path = gridGame.dijkstra(grid)
-print(path)
-gridGame.computePath(grid, path)
+cost, newGrid = gridGame.computePath(grid, path)
+gridGame.visualizeTheGrid(newGrid)
+print("Mean: ", gridGame.mean(path))
+print("Variance: ", gridGame.variance(path))
+"""
 
 
+def analyze_the_size():
+    sizes = [5, 10, 25, 50]
+    costs = []
+    #variances = []
+    #means = []
+    
+    for size in sizes:
+        gridGame = numberInCellMode(size, size)
+        grid = gridGame.buildTheGame(distribution='uniform')
+        path = gridGame.dijkstra(grid)
+        cost, newGrid = gridGame.computePath(grid, path)
+        #variance = gridGame.variance(path)
+        #mean = gridGame.mean(path)
+        costs.append(cost)
+        #means.append(mean)
+        #variances.append(variance)
+    
+    plt.figure()
+    plt.plot(costs)
 
-
-
-
-
-
-
-
+analyze_the_size()
