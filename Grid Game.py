@@ -7,12 +7,14 @@ Created on Wed Oct 20 10:57:03 2021
 
 # importing the libraries
 
+import time
 import numpy as np
 import matplotlib.pyplot as plt
 from abc import ABC, abstractmethod
 from numpy.random import default_rng
 from node import Node
 from priorityQueue import PQ
+
 
 
 # The main class, which contains the necessary methods and properties, it is an abstract class for the game's two modes.
@@ -414,16 +416,14 @@ class AbsoluteValueMode(GridGame):
         return list(reversed(path))
 
 
-"""
-gridGame = AbsoluteValueMode(10, 10)
+
+gridGame = numberInCellMode(10, 10)
 grid = gridGame.buildTheGame()
 gridGame.visualizeTheGrid(grid)
 path = gridGame.dijkstra(grid)
 cost, newGrid = gridGame.computePath(grid, path)
 gridGame.visualizeTheGrid(newGrid)
-print("Mean: ", gridGame.mean(path))
-print("Variance: ", gridGame.variance(path))
-"""
+
 
 
 def analyze_the_size():
@@ -446,4 +446,24 @@ def analyze_the_size():
     plt.figure()
     plt.plot(costs)
 
+
 analyze_the_size()
+
+def check_execution_time():
+    sizes = [5, 10, 20, 30, 40, 50, 100, 200]
+    times = []
+    
+    for size in sizes:
+        gridGame = numberInCellMode(size, size)
+        grid = gridGame.buildTheGame()
+        start_time = time.time()
+        path = gridGame.dijkstra(grid)
+        finish_time = time.time()
+        seconds = finish_time - start_time
+        print(seconds)
+        times.append(seconds)
+    
+    plt.figure()
+    plt.plot(times)
+
+#check_execution_time()
