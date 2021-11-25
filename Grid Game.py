@@ -23,11 +23,43 @@ class GridGame(ABC):
     # constructor method to iniialize the game with the height and width an the max number a cell can take, finally create an empty array
     def __init__(self, height=5, width=5, n=9):
         
-        self.height = height
-        self.width = width
-        self.n = n
-        self.grid = []
+        self.__height = height
+        self.__width = width
+        self.__n = n
+        self.__grid = []
+    
+    
+    @property 
+    def height(self):
+        return self.__height
+    
+    @height.setter
+    def height(self, height):
+        self.__height = height
         
+    @property 
+    def width(self):
+        return self.__width
+    
+    @width.setter
+    def width(self, width):
+        self.__width = width   
+    
+    @property 
+    def n(self):
+        return self.__n
+    
+    @n.setter
+    def n(self, n):
+        self.__n = n  
+    
+    @property 
+    def grid(self):
+        return self.__grid
+    
+    @grid.setter
+    def grid(self, grid):
+        self.__grid = grid  
     
     # This method is responsible for build the game, essentially filling the grid with numbers
     def buildTheGame(self, distribution="normal"):
